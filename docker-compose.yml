@@ -1,0 +1,102 @@
+version: "3.8"
+
+services:
+
+  project_service:
+    image: project_service
+    container_name: project_service
+    hostname: ${PROJECT_SERVICE_HOST}
+    build:
+      context: ./project_service/
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      PROJECT_DB_HOST: ${PROJECT_DB_HOST}
+      PROJECT_DB_PORT: ${PROJECT_DB_PORT}
+      PROJECT_SERVICE_PORT: ${PROJECT_SERVICE_PORT}
+    depends_on:
+      - project_db
+    networks:
+      - network
+
+    
+  user_service:
+    image: user_service
+    container_name: user_service
+    hostname: ${USER_SERVICE_HOST}
+    build:
+      context: ./user_service/
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      USER_DB_HOST: ${USER_DB_HOST}
+      USER_DB_PORT: ${USER_DB_PORT}
+      USER_SERVICE_PORT: ${USER_SERVICE_PORT}
+    depends_on:
+      - user_db
+    networks:
+      - network
+
+  task_service:
+    image: task_service
+    container_name: task_service
+    hostname: ${TASK_SERVICE_HOST}
+    build:
+      context: ./task_service/
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      TASK_DB_HOST: ${TASK_DB_HOST}
+      TASK_DB_PORT: ${TASK_DB_PORT}
+      TASK_SERVICE_PORT: ${TASK_SERVICE_PORT}
+    depends_on:
+      - task_db
+    networks:
+      - network
+
+  
+
+  api_gateway:
+    build:
+      context: ./api_gateway/
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    hostname: ${API_GATEWAY_HOST}
+    restart: on-failure
+    ports:
+      - ${API_GATEWAY_PORT}:${API_GATEWAY_PORT}
+    depends_on:
+      - project_service
+      - user_service
+      - task_service
+    networks:
+      - network
+
+   
+
+      
+
+  project_db:
+    image: mongo
+    container_name: project_db
+    restart: on-failure
+    networks:
+      - network
+
+  user_db:
+    image: mongo
+    container_name: user_db
+    restart: on-failure
+    networks:
+      - network
+
+  task_db:
+    image: mongo
+    container_name: task_db
+    restart: on-failure
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
