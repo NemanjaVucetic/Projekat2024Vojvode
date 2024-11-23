@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	DATABASE   = "usersdb" // Database name
-	COLLECTION = "users"   // Collection name
+	DATABASE   = "users1_db" // Database name
+	COLLECTION = "users_c"   // Collection name
 )
 
 type UserMongoDBStore struct {
@@ -63,7 +63,7 @@ func (store *UserMongoDBStore) DeleteAll() {
 
 func (store *UserMongoDBStore) FindByEmail(email string) (*domain.User, error) {
 	filter := bson.M{"email": email}
-	return store.filterOne(filter)
+	return store.filterOneNoError(filter)
 }
 
 // Internal helper for filtering multiple users
@@ -82,6 +82,19 @@ func (store *UserMongoDBStore) filterOne(filter interface{}) (*domain.User, erro
 	var user domain.User
 	err := result.Decode(&user)
 	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (store *UserMongoDBStore) filterOneNoError(filter interface{}) (*domain.User, error) {
+	result := store.users.FindOne(context.TODO(), filter)
+	var user domain.User
+	err := result.Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &user, nil

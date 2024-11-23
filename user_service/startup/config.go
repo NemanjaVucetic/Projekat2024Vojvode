@@ -10,7 +10,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		Port:       os.Getenv("USER_SERVICE_HOST"),
+		Port:       os.Getenv("USER_SERVICE_PORT"),
 		UserDBHost: os.Getenv("USER_DB_HOST"),
 		UserDBPort: os.Getenv("USER_DB_PORT"),
 	}

@@ -13,6 +13,7 @@ import (
 	"userService/repository"
 	"userService/service"
 
+	"github.com/gorilla/handlers" // Import gorilla handlers za CORS
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -77,9 +78,17 @@ func (server *Server) start(userHandler *handler.UsersHandler) {
 	r := mux.NewRouter()
 	userHandler.Init(r)
 
+	// Dodavanje CORS middleware-a
+	corsHandler := handlers.CORS(
+		handlers.AllowedOrigins([]string{"http://localhost:4200"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+	)
+
+	// Kreiranje HTTP servera sa CORS middleware-om
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", server.config.Port),
-		Handler: r,
+		Handler: corsHandler(r),
 	}
 
 	wait := time.Second * 15

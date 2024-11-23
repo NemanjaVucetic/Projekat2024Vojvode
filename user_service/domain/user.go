@@ -14,6 +14,7 @@ type User struct {
 	Email    string             `bson:"email" json:"email"`
 	Password string             `bson:"password" json:"password"`
 	UserRole string             `bson:"userRole" json:"userRole"`
+	Enabled  bool               `bson:"enabled" json:"enabled"`
 }
 
 type Users []*User

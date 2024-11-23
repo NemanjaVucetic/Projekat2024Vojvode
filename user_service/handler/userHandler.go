@@ -25,6 +25,7 @@ func (h *UsersHandler) Init(r *mux.Router) {
 	r.HandleFunc("/{id}", h.GetUserByID).Methods("GET")
 	r.HandleFunc("/", h.PostUser).Methods("POST")
 	r.HandleFunc("/login", h.Login).Methods("POST")
+	r.HandleFunc("/validate/{id}", h.ValidateAccountHandler).Methods("GET")
 	http.Handle("/", r)
 }
 
@@ -80,7 +81,7 @@ func (h *UsersHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 
 	err1 := h.userService.Create(&user)
 	if err1 != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err1.Error(), http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -110,6 +111,19 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(map[string]string{"token": token}, w)
+}
+
+func (h *UsersHandler) ValidateAccountHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	err := h.userService.ValidateAccount(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func jsonResponse(data interface{}, w http.ResponseWriter) {
