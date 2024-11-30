@@ -1,0 +1,85 @@
+/* Container styling */
+.container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Heading */
+  .container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* Form labels */
+  .form-group label {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  /* Form controls */
+  .form-control {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.25);
+  }
+  
+  /* Error messages */
+  .text-danger {
+    font-size: 14px;
+    color: #e63946;
+  }
+  
+  /* Submit button */
+  .btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    background-color: #0056b3;
+    transform: scale(1.02);
+  }
+  
+  /* Media query for responsiveness */
+  @media (max-width: 576px) {
+    .container {
+      padding: 15px;
+      margin: 20px auto;
+    }
+  
+    .btn {
+      font-size: 14px;
+    }
+  }
+  
