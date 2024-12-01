@@ -1,0 +1,49 @@
+<div class="container">
+    <h2>Create a New Project</h2>
+    <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+      <!-- Project Name -->
+      <div class="form-group">
+        <label for="name">Project Name</label>
+        <input type="text" id="name" formControlName="name" class="form-control" />
+        <div *ngIf="formControls['name'].touched && formControls['name'].invalid" class="text-danger">
+          <small *ngIf="formControls['name'].errors?.['required']">Name is required.</small>
+          <small *ngIf="formControls['name'].errors?.['maxLength']">Name cannot exceed 255 characters.</small>
+        </div>
+      </div>
+  
+      <!-- Deadline -->
+      <div class="form-group">
+        <label for="deadline">Deadline</label>
+        <input type="date" id="deadline" formControlName="deadline" class="form-control" />
+        <div *ngIf="formControls['deadline'].touched && formControls['deadline'].invalid" class="text-danger">
+          <small *ngIf="formControls['deadline'].errors?.['required']">Deadline is required.</small>
+        </div>
+      </div>
+  
+      <!-- Max Members -->
+      <div class="form-group">
+        <label for="maxMembers">Max Members</label>
+        <input type="number" id="maxMembers" formControlName="maxMembers" class="form-control" />
+        <div *ngIf="formControls['maxMembers'].touched && formControls['maxMembers'].invalid" class="text-danger">
+          <small *ngIf="formControls['maxMembers'].errors?.['required']">Max Members is required.</small>
+          <small *ngIf="formControls['maxMembers'].errors?.['min']">Max Members must be at least 1.</small>
+        </div>
+      </div>
+  
+      <!-- Min Members -->
+      <div class="form-group">
+        <label for="minMembers">Min Members</label>
+        <input type="number" id="minMembers" formControlName="minMembers" class="form-control" />
+        <div *ngIf="formControls['minMembers'].touched && formControls['minMembers'].invalid" class="text-danger">
+          <small *ngIf="formControls['minMembers'].errors?.['required']">Min Members is required.</small>
+          <small *ngIf="formControls['minMembers'].errors?.['min']">Min Members must be at least 1.</small>
+        </div>
+      </div>
+  
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Creating...' : 'Create Project' }}
+      </button>
+    </form>
+  </div>
+  

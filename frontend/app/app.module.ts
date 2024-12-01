@@ -7,7 +7,9 @@ import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { ReactiveFormsModule } from '@angular/forms';  
 import { AppRoutingModule } from './app-routing.module';
-import { JwtHelperService, JwtModule } from '@auth0/angular-jwt'; 
+import { JwtHelperService, JwtModule } from '@auth0/angular-jwt';  
+import { ProjectCreateComponent } from './project-create/project-create.component';
+
 
 export function tokenGetter() {
   return localStorage.getItem('jwtToken');
@@ -18,6 +20,7 @@ export function tokenGetter() {
     AppComponent,
     LoginComponent,
     RegisterComponent,
+    ProjectCreateComponent,
   ],
   imports: [
     BrowserModule,
@@ -25,10 +28,9 @@ export function tokenGetter() {
     HttpClientModule,
     AppRoutingModule,  
     ReactiveFormsModule,  
-    JwtModule.forRoot({ 
+    JwtModule.forRoot({  
       config: {
         tokenGetter: tokenGetter,
-        allowedDomains: ['localhost:8000'],  
         disallowedRoutes: []  
       }
     })
