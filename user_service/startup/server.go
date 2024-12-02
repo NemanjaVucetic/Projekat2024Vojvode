@@ -56,13 +56,13 @@ func (server *Server) initMongoClient() *mongo.Client {
 
 func (server *Server) initUserStore(client *mongo.Client) *repository.UserMongoDBStore {
 	store := repository.NewUserMongoDBStore(client)
-	store.DeleteAll() //*****************************************brise sve po pokretanju
-	for _, User := range users {
-		err := store.Insert(User)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	//store.DeleteAll() //*****************************************brise sve po pokretanju
+	//for _, User := range users {
+	//err := store.Insert(User)
+	//if err != nil {
+	//log.Fatal(err)
+	//}
+	//}
 	return store
 }
 
@@ -76,40 +76,52 @@ func (server *Server) initUserHandler(service service.UserService) *handler.User
 
 func (server *Server) start(userHandler *handler.UsersHandler) {
 	r := mux.NewRouter()
+
+	// Add a handler for preflight requests
+	r.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.WriteHeader(http.StatusNoContent) // Return HTTP 204
+	})
+
+	// Initialize the userHandler
 	userHandler.Init(r)
 
-	// Dodavanje CORS middleware-a
+	// Add CORS middleware
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{"http://localhost:4200"}),
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+		handlers.AllowCredentials(),
 	)
 
-	// Kreiranje HTTP servera sa CORS middleware-om
+	// Wrap the router with CORS middleware
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", server.config.Port),
 		Handler: corsHandler(r),
 	}
 
+	// Graceful shutdown logic with a timeout of 15 seconds
 	wait := time.Second * 15
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Println(err)
+		log.Printf("Starting server on port %s", server.config.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("ListenAndServe failed: %v", err)
 		}
 	}()
 
+	// Handle graceful shutdown
 	c := make(chan os.Signal, 1)
-
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	<-c
+	log.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
-
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("error shutting down server %s", err)
+		log.Fatalf("Error shutting down server: %s", err)
 	}
-	log.Println("server gracefully stopped")
+	log.Println("Server gracefully stopped")
 }

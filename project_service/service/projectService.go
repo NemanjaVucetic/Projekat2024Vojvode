@@ -37,41 +37,37 @@ func (service *ProjectService) Create(project *domain.Project) error {
 	return service.repo.Insert(project)
 }
 
-func (service *ProjectService) AddUserToProject(projectId string, userId string) error {
-	// Convert project ID to ObjectID
+func (service *ProjectService) AddUserToProject(projectId string, userId string, loggedUserID string) error {
 	projectID, err := primitive.ObjectIDFromHex(projectId)
 	if err != nil {
 		return err
 	}
 
-	// Retrieve the project from the repository
 	project, err := service.repo.Get(projectID)
 	if err != nil {
 		return err
 	}
 
-	// Ensure project is found
 	if project == nil {
 		return fmt.Errorf("project not found")
 	}
+	if project.ManagerID.Hex() != loggedUserID {
+		return fmt.Errorf("user is not the project manager")
+	}
 
-	// Retrieve the user from the user service
 	user, err := service.userClient.Get(userId)
 	if err != nil {
 		return err
 	}
 
-	// Ensure user is found
 	if user == nil {
 		return fmt.Errorf("user not found")
 	}
 
-	// Check if the project is full
 	if len(project.Members) >= project.MaxMembers {
 		return fmt.Errorf("cannot add user: project has reached max members")
 	}
 
-	// Add the user to the project using the repository
 	err = service.repo.AddUserToProject(projectID, user)
 	if err != nil {
 		return err
@@ -80,14 +76,38 @@ func (service *ProjectService) AddUserToProject(projectId string, userId string)
 	return nil
 }
 
+func (service *ProjectService) RemoveUserFromProject(projectID primitive.ObjectID, userID primitive.ObjectID) error {
+	project, err := service.repo.Get(projectID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch project: %v", err)
+	}
+	if project == nil {
+		return fmt.Errorf("project not found")
+	}
+	userExists := false
+	for _, member := range project.Members {
+		if member.ID == userID {
+			userExists = true
+			break
+		}
+	}
+	if !userExists {
+		return fmt.Errorf("user not part of the project")
+	}
+	err = service.repo.RemoveUserFromProject(projectID, userID)
+	if err != nil {
+		return fmt.Errorf("failed to remove user from project: %v", err)
+	}
+
+	return nil
+}
+
 func (service *ProjectService) GetByUserId(userId string) ([]*domain.Project, error) {
-	// Convert the userId string to ObjectID
 	userID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %v", err)
 	}
 
-	// Fetch projects using the repository method
 	projects, err := service.repo.GetByUserId(userID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching projects for user: %v", err)

@@ -33,7 +33,7 @@ func (client Client) Get(id string) (*domain.User, error) {
 	if err != nil || res.StatusCode != http.StatusOK {
 		log.Println(err)
 		log.Println(res.StatusCode)
-		return nil, errors.New("error while getting shipping info")
+		return nil, errors.New("error while getting user info")
 	}
 
 	user := &domain.User{}

@@ -15,6 +15,7 @@ import (
 
 	"projectService/client"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -63,13 +64,13 @@ func (server *Server) initMongoClient() *mongo.Client {
 
 func (server *Server) initProjectStore(client *mongo.Client) *repository.ProjectMongoDBStore {
 	store := repository.NewProjectMongoDBStore(client)
-	store.DeleteAll()
-	for _, Project := range projects {
-		err := store.Insert(Project)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	//store.DeleteAll()
+	//for _, Project := range projects {
+	//err := store.Insert(Project)
+	//if err != nil {
+	//log.Fatal(err)
+	//}
+	//}
 	return store
 }
 
@@ -81,34 +82,54 @@ func (server *Server) initProjectHandler(service *service.ProjectService) *handl
 	return handler.NewProjectsHandler(service)
 }
 
-func (server *Server) start(orderHandler *handler.ProjectsHandler) {
+func (server *Server) start(projectHandler *handler.ProjectsHandler) {
 	r := mux.NewRouter()
-	orderHandler.Init(r)
 
+	// Add a handler for preflight requests
+	r.Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.WriteHeader(http.StatusNoContent) // Return HTTP 204
+	})
+
+	// Initialize the handler
+	projectHandler.Init(r)
+
+	// Add CORS middleware
+	corsHandler := handlers.CORS(
+		handlers.AllowedOrigins([]string{"http://localhost:4200"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+		handlers.AllowCredentials(),
+	)
+
+	// Wrap the router
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", server.config.Port),
-		Handler: r,
+		Handler: corsHandler(r),
 	}
 
+	// Start the server
 	wait := time.Second * 15
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			log.Println(err)
+		log.Printf("Starting server on port %s", server.config.Port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("ListenAndServe failed: %v", err)
 		}
 	}()
 
+	// Graceful shutdown logic
 	c := make(chan os.Signal, 1)
-
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	<-c
+	log.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
-
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("error shutting down server %s", err)
+		log.Fatalf("Error shutting down server: %s", err)
 	}
-	log.Println("server gracefully stopped")
+	log.Println("Server gracefully stopped")
 }

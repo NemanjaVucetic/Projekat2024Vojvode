@@ -20,12 +20,24 @@ func NewUsersHandler(userService service.UserService) *UsersHandler {
 	return &UsersHandler{userService: userService}
 }
 
+/*
+	func (h *UsersHandler) Init1(r *mux.Router) {
+		r.HandleFunc("/", h.GetAllUsers).Methods("GET")
+		r.HandleFunc("/{id}", h.GetUserByID).Methods("GET")
+		r.HandleFunc("/", h.PostUser).Methods("POST")
+		r.HandleFunc("/login", h.Login).Methods("POST")
+		r.HandleFunc("/validate/{id}", h.ValidateAccountHandler).Methods("GET")
+		http.Handle("/", r)
+	}
+*/
 func (h *UsersHandler) Init(r *mux.Router) {
-	r.HandleFunc("/", h.GetAllUsers).Methods("GET")
-	r.HandleFunc("/{id}", h.GetUserByID).Methods("GET")
-	r.HandleFunc("/", h.PostUser).Methods("POST")
-	r.HandleFunc("/login", h.Login).Methods("POST")
+
+	r.Handle("/", h.JWTAuthMiddleware("Manager", http.HandlerFunc(h.GetAllUsers))).Methods("GET")
+	r.HandleFunc("/login", h.Login).Methods("POST") // Login is public
+	r.HandleFunc("/", h.PostUser).Methods("POST")   // Registration is public
 	r.HandleFunc("/validate/{id}", h.ValidateAccountHandler).Methods("GET")
+	r.HandleFunc("/{id}", h.GetUserByID).Methods("GET")
+
 	http.Handle("/", r)
 }
 
@@ -38,14 +50,17 @@ func (h *UsersHandler) JWTAuthMiddleware(requiredRole string, next http.Handler)
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
-		email, role, err := utils.ValidateJWT(token)
+		userID, email, role, err := utils.ValidateJWT(token) // Dodaj userID ovde
 		if err != nil || role != requiredRole {
 			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		// Add email to context for further handling
-		r = r.WithContext(context.WithValue(r.Context(), "email", email))
+		// Add userID and email to context for further handling
+		ctx := context.WithValue(r.Context(), "userId", userID)
+		ctx = context.WithValue(ctx, "email", email)
+		r = r.WithContext(ctx)
+
 		next.ServeHTTP(rw, r)
 	})
 }
@@ -92,6 +107,7 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
 	err := json.NewDecoder(r.Body).Decode(&loginRequest)
 	if err != nil {
 		http.Error(w, "Invalid login request", http.StatusBadRequest)
@@ -104,7 +120,7 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.Email, user.UserRole)
+	token, err := utils.GenerateJWT(user.ID.Hex(), user.Email, user.UserRole)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return

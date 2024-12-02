@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"userService/domain"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -36,6 +37,25 @@ func (store *UserMongoDBStore) GetAll() ([]*domain.User, error) {
 }
 
 func (store *UserMongoDBStore) Insert(user *domain.User) error {
+	// Check if email already exists
+	existingUser, err := store.FindByEmail(user.Email)
+	if err != nil {
+		return err
+	}
+	if existingUser != nil {
+		return errors.New("email already in use")
+	}
+
+	// Check if username already exists
+	existingUserByUsername, err := store.FindByUsername(user.Username)
+	if err != nil {
+		return err
+	}
+	if existingUserByUsername != nil {
+		return errors.New("username already in use")
+	}
+
+	// Insert the user into the database
 	result, err := store.users.InsertOne(context.TODO(), user)
 	if err != nil {
 		return err
@@ -63,6 +83,11 @@ func (store *UserMongoDBStore) DeleteAll() {
 
 func (store *UserMongoDBStore) FindByEmail(email string) (*domain.User, error) {
 	filter := bson.M{"email": email}
+	return store.filterOneNoError(filter)
+}
+
+func (store *UserMongoDBStore) FindByUsername(username string) (*domain.User, error) {
+	filter := bson.M{"username": username}
 	return store.filterOneNoError(filter)
 }
 
@@ -113,4 +138,26 @@ func decode(cursor *mongo.Cursor) ([]*domain.User, error) {
 	}
 	err := cursor.Err()
 	return users, err
+}
+
+func (store *UserMongoDBStore) ChangePassword(userID primitive.ObjectID, newPassword string) error {
+	// Find the user by ID
+	filter := bson.M{"_id": userID}
+
+	// Check if the user exists
+	_, err := store.filterOne(filter)
+	if err != nil {
+		return err
+	}
+
+	// Update the password with the new one
+	updateData := bson.M{
+		"$set": bson.M{"password": newPassword},
+	}
+	_, err = store.users.UpdateOne(context.TODO(), filter, updateData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

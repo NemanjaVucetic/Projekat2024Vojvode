@@ -50,6 +50,19 @@ func (store *ProjectMongoDBStore) Insert(project *domain.Project) error {
 	return nil
 }
 
+func (repo *ProjectMongoDBStore) RemoveUserFromProject(projectID primitive.ObjectID, userID primitive.ObjectID) error {
+	filter := bson.M{"_id": projectID}
+
+	update := bson.M{
+		"$pull": bson.M{
+			"members": bson.M{"_id": userID},
+		},
+	}
+
+	_, err := repo.projects.UpdateOne(context.TODO(), filter, update)
+	return err
+}
+
 func (store *ProjectMongoDBStore) DeleteAll() {
 	store.projects.DeleteMany(context.TODO(), bson.D{{}})
 }
@@ -117,4 +130,17 @@ func (store *ProjectMongoDBStore) AddUserToProject(projectID primitive.ObjectID,
 		return err
 	}
 	return nil
+}
+
+func (store *ProjectMongoDBStore) GetByUserId(userID primitive.ObjectID) ([]*domain.Project, error) {
+	// Define the filter to match projects where the user is a member
+	filter := bson.M{
+		"members": bson.M{
+			"$elemMatch": bson.M{
+				"_id": userID,
+			},
+		},
+	}
+	// Use the existing filter method to retrieve the projects
+	return store.filter(filter)
 }

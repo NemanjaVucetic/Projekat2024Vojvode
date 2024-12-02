@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-
   project_service:
     image: project_service
     container_name: project_service
@@ -14,12 +13,13 @@ services:
       PROJECT_DB_HOST: ${PROJECT_DB_HOST}
       PROJECT_DB_PORT: ${PROJECT_DB_PORT}
       PROJECT_SERVICE_PORT: ${PROJECT_SERVICE_PORT}
+      USER_SERVICE_HOST: ${USER_SERVICE_HOST}
+      USER_SERVICE_PORT: ${USER_SERVICE_PORT}
     depends_on:
       - project_db
     networks:
       - network
 
-    
   user_service:
     image: user_service
     container_name: user_service
@@ -37,24 +37,25 @@ services:
     networks:
       - network
 
-  task_service:
-    image: task_service
-    container_name: task_service
-    hostname: ${TASK_SERVICE_HOST}
+  notification_service:
+    image: notification_service
+    container_name: notification_service
+    hostname: ${NOTIFICATION_SERVICE_HOST}
     build:
-      context: ./task_service/
+      context: ./notification_service/
       dockerfile: Dockerfile
     restart: always
     environment:
-      TASK_DB_HOST: ${TASK_DB_HOST}
-      TASK_DB_PORT: ${TASK_DB_PORT}
-      TASK_SERVICE_PORT: ${TASK_SERVICE_PORT}
+      NOTIFICATION_DB_HOST: ${NOTIFICATION_DB_HOST}
+      NOTIFICATION_DB_PORT: ${NOTIFICATION_DB_PORT}
+      NOTIFICATION_SERVICE_PORT: ${NOTIFICATION_SERVICE_PORT}
+      CASS_DB: "${NOTIFICATION_DB_HOST}:${NOTIFICATION_DB_PORT}"
+
     depends_on:
-      - task_db
+      cassandra:
+        condition: service_healthy
     networks:
       - network
-
-  
 
   api_gateway:
     build:
@@ -68,13 +69,9 @@ services:
     depends_on:
       - project_service
       - user_service
-      - task_service
+      - notification_service
     networks:
       - network
-
-   
-
-      
 
   project_db:
     image: mongo
@@ -82,6 +79,8 @@ services:
     restart: on-failure
     networks:
       - network
+    volumes:
+      - project_db_data:/data/db
 
   user_db:
     image: mongo
@@ -89,13 +88,29 @@ services:
     restart: on-failure
     networks:
       - network
+    volumes:
+      - user_db_data:/data/db
 
-  task_db:
-    image: mongo
-    container_name: task_db
-    restart: on-failure
+  cassandra:
+    image: cassandra
+    container_name: cassandra
+    restart: always
+    ports:
+      - "${NOTIFICATION_DB_PORT}:${NOTIFICATION_DB_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+    volumes:
+      - cass_store:/var/lib/cassandra/data
     networks:
       - network
+
+volumes:
+  cass_store:
+  user_db_data:
+  project_db_data:
 
 networks:
   network:

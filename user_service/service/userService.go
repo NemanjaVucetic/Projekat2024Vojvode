@@ -121,3 +121,4 @@ func (service *UserService) ValidateAccount(id string) error {
 	updateData := map[string]interface{}{"enabled": true}
 	return service.repo.Update(userID, updateData)
 }
+
