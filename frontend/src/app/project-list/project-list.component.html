@@ -1,0 +1,58 @@
+<div class="project-list-container" *ngIf="projects.length > 0; else noProjects">
+  <h2>Project List</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Manager</th>
+        <th>Deadline</th>
+        <th>Max Members</th>
+        <th>Min Members</th>
+        <th>Members</th>
+        <th>Add User</th> <!-- Column for adding a user -->
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let project of projects">
+        <td>{{ project.name }}</td>
+        <td>{{ project.manager }}</td>
+        <td>{{ project.deadline }}</td>
+        <td>{{ project.maxMembers }}</td>
+        <td>{{ project.minMembers }}</td>
+        <td>
+          <ul>
+            <li *ngFor="let member of project.members">
+              {{ member.name }} {{ member.surname }} ({{ member.userRole }})
+              <button
+                *ngIf="member.id !== project.manager"
+                class="remove-button"
+                (click)="removeUserFromProject(project.id, member.id)"
+              >
+                Remove User
+              </button>
+            </li>
+          </ul>
+        </td>
+        <td>
+          <select [(ngModel)]="selectedUserId">
+            <option value="" disabled>Select a user</option>
+            <option *ngFor="let user of users" [value]="user.id">
+              {{ user.name }} {{ user.surname }}
+            </option>
+          </select>
+          <button
+            *ngIf="selectedUserId"
+            class="add-button"
+            (click)="addUserToProject(project.id, selectedUserId)"
+          >
+            Add User
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<ng-template #noProjects>
+  <p>No projects found.</p>
+</ng-template>

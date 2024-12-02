@@ -1,0 +1,12 @@
+<div *ngIf="notifications.length > 0; else noNotifications">
+  <ul class="notification-list">
+    <li *ngFor="let notification of notifications" class="notification-item">
+      <div class="notification-text">{{ notification.Message }}</div> <!-- Updated to display Message -->
+      <button (click)="discardNotification(notification.ID)" class="discard-btn">Discard</button> <!-- Corrected field name -->
+    </li>
+  </ul>
+</div>
+
+<ng-template #noNotifications>
+  <p class="no-notifications">No notifications available.</p>
+</ng-template>

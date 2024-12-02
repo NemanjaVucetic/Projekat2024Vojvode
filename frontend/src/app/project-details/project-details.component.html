@@ -1,0 +1,17 @@
+<div *ngIf="project?.length; else loading" class="project-container">
+    <div *ngFor="let p of project" class="project-card">
+      <h2>Projekt: {{ p.name }}</h2>
+      <p><strong>Rok:</strong> {{ p.deadline }}</p>
+      <h3>Članovi Tima:</h3>
+      <ul class="member-list">
+        <li *ngFor="let member of p.members">
+          <span>{{ member.name }} {{ member.surname }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  <ng-template #loading>
+    <p class="loading">Podaci o projektu se učitavaju...</p>
+  </ng-template>
+  

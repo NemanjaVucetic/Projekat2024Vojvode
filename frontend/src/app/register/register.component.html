@@ -1,0 +1,64 @@
+<div class="container">
+  <h2>Registration</h2>
+  
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="name">First Name</label>
+      <input id="name" formControlName="name" class="form-control" />
+      <div *ngIf="f.name.touched && f.name.invalid" class="text-danger">
+        <small *ngIf="f.name.errors?.['required']">First name is required.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="surname">Last Name</label>
+      <input id="surname" formControlName="surname" class="form-control" />
+      <div *ngIf="f.surname.touched && f.surname.invalid" class="text-danger">
+        <small *ngIf="f.surname.errors?.['required']">Last name is required.</small>
+      </div>
+    </div>
+
+    <!-- Username field -->
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input id="username" formControlName="username" class="form-control" />
+      <div *ngIf="f.username.touched && f.username.invalid" class="text-danger">
+        <small *ngIf="f.username.errors?.['required']">Username is required.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input id="email" formControlName="email" class="form-control" />
+      <div *ngIf="f.email.touched && f.email.invalid" class="text-danger">
+        <small *ngIf="f.email.errors?.['required']">Email is required.</small>
+        <small *ngIf="f.email.errors?.['email']">Please enter a valid email.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" formControlName="password" class="form-control" />
+      <div *ngIf="f.password.touched && f.password.invalid" class="text-danger">
+        <small *ngIf="f.password.errors?.['required']">Password is required.</small>
+        <small *ngIf="f.password.errors?.['minlength']">Password must be at least 6 characters long.</small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="userRole">Role</label>
+      <select formControlName="userRole" class="form-control">
+        <option value="user">User</option>
+        <option value="Manager">Manager</option>
+      </select>
+    </div>
+
+    <button type="submit" [disabled]="isLoading || registerForm.invalid" class="btn btn-primary">
+      Register
+    </button>
+
+    <div *ngIf="isLoading">Registration in progress...</div>
+    <div *ngIf="successMessage" class="text-success">{{ successMessage }}</div>
+    <div *ngIf="errorMessage" class="text-danger">{{ errorMessage }}</div>
+  </form>
+</div>

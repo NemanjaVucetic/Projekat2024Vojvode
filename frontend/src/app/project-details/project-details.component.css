@@ -1,0 +1,59 @@
+/* Stil za sve projekte */
+.project-container {
+    margin: 20px;
+    padding: 20px;
+    background-color: #f4f7f6;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .project-card {
+    background-color: white;
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .project-card h2 {
+    color: #2e3d49;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .project-card p {
+    font-size: 16px;
+    color: #555;
+  }
+  
+  .project-card h3 {
+    color: #2e3d49;
+    font-size: 18px;
+    margin-top: 20px;
+  }
+  
+  .member-list {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .member-list li {
+    background-color: #e6f1f1;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 4px;
+    color: #444;
+  }
+  
+  .member-list li span {
+    font-weight: bold;
+  }
+  
+  /* Loading state */
+  .loading {
+    font-size: 18px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 50px;
+  }
+  
